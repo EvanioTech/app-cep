@@ -1,14 +1,35 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Keyboard } from "react-native";
 import api from "./src/services/api";
 
 export default function App() {
   const [cep, setCep] = useState("");
-  function mostraCep(){
-    alert('mostrou')
+  const inputRef = useRef(null);
+  const [cepUser, setCepUser] = useState(null)
+
+
+
+
+  async function mostraCep(){
+    if(cep == '') {
+      alert('Digite um cep Valido');
+      setCep('');
+      return;
+    }
+    try{
+      const response = await api.get(`/${cep}/json`);
+      console.log(response.data);
+      Keyboard.dismiss;
+      setCepUser(response.data);
+    }catch(error){
+      console.log('ERROR: ' + error);
+    }
+    
   }
   function limpaCep(){
-    alert('limpou')
+    setCep('');
+    inputRef.current.focus();
+    setCepUser(null)
   }
 
   return (
@@ -21,6 +42,7 @@ export default function App() {
           value={cep}
           onChangeText={(texto) => setCep(texto)}
           keyboardType="numeric"
+          ref={inputRef}
         />
         </View>
         <View style={styles.areaBtn}>
@@ -31,13 +53,17 @@ export default function App() {
             <Text style={styles.botaoText}>Limpar</Text>
           </TouchableOpacity>
         </View>
+       { cepUser &&
         <View style={styles.resultado}>
-          <Text style={styles.itemText}>teste</Text>
-          <Text style={styles.itemText}>teste</Text>
-          <Text style={styles.itemText}>teste</Text>
-          <Text style={styles.itemText}>teste</Text>
-          <Text style={styles.itemText}>teste</Text>
-        </View>
+        <Text style={styles.itemText}>CEP: {cepUser.cep}</Text>
+        <Text style={styles.itemText}>Logradouro: {cepUser.logradouro}</Text>
+        <Text style={styles.itemText}>Bairro: {cepUser.bairro}</Text>
+        <Text style={styles.itemText}>Cidade: {cepUser.localidade}</Text>
+        <Text style={styles.itemText}>Estado: {cepUser.estado}</Text>
+      </View>
+       
+       
+       }
       
     </SafeAreaView>
   );
@@ -45,9 +71,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    flex:1,
     marginTop:50
   },
   text: {
